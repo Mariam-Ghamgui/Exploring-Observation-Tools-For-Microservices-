@@ -3,11 +3,11 @@ services:
   quotes:
     build:
       context: ./QuoteService
-      dockerfile: app.dockerfile
+      dockerfile: Dockerfile
   api:
     build:
       context: ./ApiGateway
-      dockerfile: app.dockerfile
+      dockerfile: Dockerfile
     environment:
       - "QUOTES_API=http://quotes:5000"
     depends_on:
@@ -17,7 +17,7 @@ services:
   frontend:
     build:
       context: ./FrontendApplication
-      dockerfile: app.dockerfile
+      dockerfile: Dockerfile
     ports:
       - "8080:80"
     

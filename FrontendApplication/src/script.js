@@ -1,9 +1,9 @@
-var api = process.env.API_GATEWAY // get the API Gateway from the environment
+var API_GATEWAY = "http://192.168.49.2:32215";
 
 $(document).ready(function() {
     $("#btn").click(function() {
         $.ajax({
-            url: api + "/api/randomquote",
+            url: API_GATEWAY + "/api/randomquote", // Corrected endpoint
             type: "GET",
             dataType: "json",
             timeout: 3000,

@@ -18,5 +18,5 @@ module.exports = {
             jQuery: 'jquery'
         }),
         new webpack.EnvironmentPlugin(['API_GATEWAY']),
-    ]
+    ],
 }

@@ -1,0 +1,252 @@
+Here's a step-by-step guide to run the Simple Microservice Example on your localhost:
+
+1. Prepare Your Environment
+Before running the project, ensure you have the following installed:
+
+Docker and Docker Compose: For containerizing and running the microservices.
+Node.js: Required for building the frontend.
+Git: To clone the repository.
+2. Clone the Repository
+Start by cloning the repository and navigating into it:
+
+bash
+Copy code
+git clone https://github.com/yourusername/simple-microservice-example.git
+cd simple-microservice-example
+3. Run the API Gateway
+The API gateway is the central point where all requests will be routed to the respective microservices.
+
+bash
+Copy code
+docker-compose up
+This command will start all services defined in the docker-compose.yml file.
+Check if the services are running by sending a GET request to your API gateway:
+bash
+Copy code
+curl http://localhost:3000/api/status
+If everything is set up correctly, you'll receive a response indicating that the application is running.
+
+4. Build the Frontend
+Next, you need to build the frontend application:
+
+Navigate to the Frontend Application Directory:
+
+bash
+Copy code
+cd FrontendApplication
+Install Dependencies:
+
+bash
+Copy code
+npm install
+or if you prefer using yarn:
+
+bash
+Copy code
+yarn
+Set the API Gateway Environment Variable:
+
+Linux/MacOS:
+
+bash
+Copy code
+export API_GATEWAY=http://localhost:3000
+
+Build the Frontend:
+
+bash
+Copy code
+npm run build
+or if you are using yarn:
+
+bash
+Copy code
+yarn build
+This command will create the index.html and main.js files in the dist/ folder.
+
+5. Run the Application
+Finally, go back to the root folder of the project and start the services again if they are not already running:
+
+bash
+Copy code
+cd ..
+docker-compose up
+6. Access the Application
+You can now access the web application by navigating to:
+
+bash
+Copy code
+http://localhost:8080
+7. Check Services
+To verify everything is working:
+
+API Gateway: Check with http://localhost:3000/api/status.
+Web Application: Visit http://localhost:8080 in your browser.
+8. Troubleshooting
+Docker Issues: Ensure Docker is running and integrated with WSL if you're using it.
+Port Conflicts: Make sure ports 3000 and 8080 are not being used by other applications.
+This guide should help you get the Simple Microservice Example up and running on your localhost.
+
+
+
+minicube
+
+you can deploy the application in a Minikube cluster by creating Kubernetes resources such as Deployments, Services, and ConfigMaps. Below are the steps to achieve this:
+
+1. Install Minikube
+First, install Minikube and kubectl on your machine.
+
+Install Minikube:
+
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+Start Minikube:
+
+bash
+Copy code
+minikube start
+
+Option 2: Force Minikube to Run as Root (Not Recommended)
+If you absolutely need to run Minikube as root, you can use the --force option, although this is not recommended:
+
+Run Minikube with Force: Use the following command:
+bash
+Copy code
+minikube start --force
+
+For Minikube:
+
+bash
+Copy code
+minikube status
+
+Install kubectl:
+
+On Linux/macOS:
+bash
+Copy code
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+chmod +x kubectl
+sudo mv kubectl /usr/local/bin/
+
+
+4. Build and Push Docker Images
+Before deploying to Minikube, ensure that your Docker images are built and pushed to a Docker registry:
+
+Build the Docker Images:
+docker build -t mariamghamgui/api-gateway:latest -f ApiGateway/app.dockerfile .
+docker build -t mariamghamgui/quote-service:latest -f QuoteService/app.dockerfile .
+docker build -t mariamghamgui/frontend-application:latest -f FrontendApplication/app.dockerfile .
+
+To push your Docker images to Docker Hub under your username mariamghamgui, you'll need to:
+
+Log in to Docker Hub: Ensure you're logged in to Docker Hub. Run the following command and provide your Docker Hub credentials when prompted:
+
+bash
+Copy code
+docker login
+
+Push the Docker Images:
+docker push mariamghamgui/api-gateway:latest
+docker push mariamghamgui/quote-service:latest
+docker push mariamghamgui/frontend-application:latest
+
+Minikube is running smoothly with the control plane, kubelet, and API server all operational. Here are the next steps you can follow:
+
+1. Verify Kubernetes Nodes
+Check if the node is up and ready:
+
+bash
+Copy code
+kubectl get nodes
+You should see the Minikube node listed as Ready.
+
+ Deploy to Minikube
+Apply the Namespace:
+
+bash
+Copy code
+kubectl apply -f namespace.yaml
+
+
+---> namespace/microservice-example created
+
+Deploy the Application:
+
+bash
+Copy code
+kubectl apply -f quote-service-deployment.yaml
+kubectl apply -f api-gateway-deployment.yaml
+kubectl apply -f frontend-deployment.yaml
+
+Create the Services:
+
+bash
+Copy code
+kubectl apply -f quote-service-service.yaml
+kubectl apply -f api-gateway-service.yaml
+kubectl apply -f frontend-service.yaml
+
+
+6. Access the Application
+Check the NodePort for your services:
+bash
+Copy code
+kubectl get services -n microservice-example
+
+root@MARIAM:~/simple-microservice-example/kubernetes# kubectl get services -n microservice-example
+NAME                    TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE
+api-gateway-service     NodePort    10.109.133.150   <none>        3000:31959/TCP   55s
+frontend-service        NodePort    10.109.121.43    <none>        80:32004/TCP     48s
+quote-service-service   ClusterIP   10.103.227.27    <none>        5000/TCP         60s
+
+To access your frontend application in Minikube, follow these steps:
+
+1. Get Minikube IP
+Retrieve the Minikube IP address:
+
+bash
+Copy code
+minikube ip
+This command will provide the IP address of your Minikube instance.
+
+root@MARIAM:~/simple-microservice-example/kubernetes# minikube ip
+192.168.58.2
+
+With the Minikube IP address 192.168.58.2, you can access your frontend application using the NodePort. Given that the NodePort for the frontend service is 32004, you should navigate to:
+
+arduino
+Copy code
+http://192.168.58.2:32004
+This should display your web application running in the frontend service. If you have any issues or need further assistance, feel free to ask!
+
+root@MARIAM:~/simple-microservice-example# kubectl get pods -n microservice-example
+NAME                                    READY   STATUS    RESTARTS   AGE
+api-gateway-6c6dc87894-2njsh            1/1     Running   0          11s
+frontend-application-688cfc474f-vzw29   1/1     Running   0          94m
+quote-service-6c9d9cf5b9-ms89q          1/1     Running   0          95m
+
+1. Verify Application Status
+Make sure that all your services are functioning as expected:
+
+Check Pod Logs: Review the logs for the api-gateway pod to confirm that it's handling requests without errors.
+root@MARIAM:~/simple-microservice-example# kubectl logs -n microservice-example api-gateway-6c6dc87894-2njsh
+
+> api@1.0.0 start /usr/src/app
+> node index.js
+
+API Gateway is listening on port 3000!
+
+1. Verify Application Status
+Make sure that all your services are functioning as expected:
+
+Check Pod Logs: Review the logs for the api-gateway pod to confirm that it's handling requests without errors.
+
+root@MARIAM:~/simple-microservice-example# kubectl get services -n microservice-example
+NAME                    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+api-gateway             ClusterIP   10.103.8.63     <none>        80/TCP           126m
+api-gateway-nodeport    NodePort    10.107.86.124   <none>        3000:31668/TCP   124m
+api-gateway-service     NodePort    10.109.49.233   <none>        3000:30344/TCP   121m
+frontend-service        NodePort    10.100.93.177   <none>        80:32346/TCP     126m
+quote-service-service   ClusterIP   10.97.55.96     <none>        5000/TCP         126m

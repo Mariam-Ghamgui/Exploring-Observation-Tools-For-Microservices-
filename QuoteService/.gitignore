@@ -1,1 +1,8 @@
 __pycache__
+*.pyc
+.git
+Dockerfile
+*.md
+.vscode
+.idea
+*.log
