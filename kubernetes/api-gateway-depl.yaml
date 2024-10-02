@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api-gateway-depl
+  annotations:
+    netdata.io/enabled: "true"  
 spec:
   replicas: 1
   selector:
@@ -11,17 +13,37 @@ spec:
     metadata:
       labels:
         app: api-gateway
+      annotations:
+        sidecar.opentelemetry.io/inject: "true"
     spec:
+      initContainers:
+      - name: otel-agent-installer
+        image: busybox
+        command: ['sh', '-c', 'wget -O /otel-agent/opentelemetry-javaagent.jar https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar']
+        volumeMounts:
+        - name: otel-agent
+          mountPath: /otel-agent
       containers:
       - name: api-gateway
         image: mariamghamgui/api-gateway:latest
         imagePullPolicy: IfNotPresent
-     
         env:
         - name: QUOTES_API
           value: "http://quotes-nodeport-srv:5000"
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: service.name=api-gateway
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://otel-collector:4318"
+        - name: NODE_OPTIONS
+          value: "-r /otel-agent/tracing.js"
+        volumeMounts:
+        - name: otel-agent
+          mountPath: /otel-agent
         ports:
-        - containerPort: 3000   
+        - containerPort: 3000
+      volumes:
+      - name: otel-agent
+        emptyDir: {}  
 
 ---
 apiVersion: v1

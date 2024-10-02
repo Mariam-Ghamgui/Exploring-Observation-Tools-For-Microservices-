@@ -1,0 +1,46 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: microservices-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /api(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: api-gateway-clusterip-srv
+            port: 
+              number: 3000
+      - path: /quotes(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: quotes-clusterip-srv
+            port: 
+              number: 5000
+      - path: /netdata(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: netdata
+            port: 
+              number: 19999
+      - path: /signoz(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: my-release-otel-collector
+            port: 
+              number: 4318
+      - path: /coroot(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: coroot-otel-collector
+            port: 
+              number: 4318

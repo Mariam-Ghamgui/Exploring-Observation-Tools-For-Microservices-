@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: quotes-depl
+  annotations:
+    netdata.io/enabled: "true"  
 spec:
   replicas: 1
   selector:
@@ -11,13 +13,35 @@ spec:
     metadata:
       labels:
         app: quotes
+      annotations:
+        sidecar.opentelemetry.io/inject: "true"
     spec:
+      initContainers:
+      - name: otel-agent-installer
+        image: busybox
+        command: ['sh', '-c', 'wget -O /otel-agent/opentelemetry-python-agent.whl https://github.com/open-telemetry/opentelemetry-python-contrib/releases/latest/download/opentelemetry_instrumentation-*.whl']
+        volumeMounts:
+        - name: otel-agent
+          mountPath: /otel-agent
       containers:
         - name: quotes
           image: mariamghamgui/quotes:latest
           imagePullPolicy: IfNotPresent
+          env:
+          - name: OTEL_RESOURCE_ATTRIBUTES
+            value: service.name=quotes-service
+          - name: OTEL_EXPORTER_OTLP_ENDPOINT
+            value: "http://otel-collector:4318"
+          - name: PYTHONPATH
+            value: "/otel-agent:${PYTHONPATH}"
+          volumeMounts:
+          - name: otel-agent
+            mountPath: /otel-agent
           ports:
           - containerPort: 5000
+      volumes:
+      - name: otel-agent
+        emptyDir: {}
 
 --- 
 apiVersion: v1
